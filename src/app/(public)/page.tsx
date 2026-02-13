@@ -1,9 +1,9 @@
 import Image from "next/image";
-import CreditScore from "./components/credit-score";
-import UploadMutation from "./components/upload";
-import RecentActivity from "./components/recent-activity";
-import FinancialLiteracy from "./components/fin-literacy";
-import FinancialTips from "./components/fin-tips";
+import CreditScore from "../components/credit-score";
+import UploadMutation from "../components/upload";
+import RecentActivity from "../components/recent-activity";
+import FinancialLiteracy from "../components/fin-literacy";
+import FinancialTips from "../components/fin-tips";
 
 export default function Home() {
   return (
