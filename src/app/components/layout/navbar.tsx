@@ -11,7 +11,7 @@ const menu = [
 
 export default function Navbar() {
   return (
-    <nav className="p-4 w-full max-w-2xl flex justify-between fixed bottom-0 mx-auto">
+    <nav className="p-4 w-full max-w-2xl flex justify-between fixed bottom-0 mx-auto bg-white">
       <div className="flex w-full gap-2 justify-around px-12">
         {
             menu.map((item) => (
