@@ -17,7 +17,7 @@ export async function GET() {
     );
 
     if (!res.ok) {
-      throw new Error(`NewsAPI responded with ${res.status}`);
+      throw new Error(`NewsAPI                                                                                                                                                                                      responded with ${res.status}`);
     }
 
     const data = await res.json();
