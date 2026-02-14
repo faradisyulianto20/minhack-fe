@@ -1,13 +1,56 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Loader2 } from "lucide-react";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function LoginPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [form, setForm] = useState({ email: "", password: "" });
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await fetch(`/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        const msg = Array.isArray(data.message)
+          ? data.message.join(", ")
+          : data.message;
+        setError(msg || "Login gagal");
+        return;
+      }
+
+      // Store token
+      if (data.access_token) {
+        localStorage.setItem("access_token", data.access_token);
+      }
+
+      // Redirect to home
+      router.push("/");
+    } catch {
+      setError("Gagal terhubung ke server");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="flex flex-col min-h-screen w-full max-w-md mx-auto bg-zinc-50 font-sans dark:bg-black">
@@ -49,7 +92,14 @@ export default function LoginPage() {
       <div className="px-6 -mt-8">
         <Card className="border-0 shadow-[0_4px_20px_rgba(0,0,0,0.08)] rounded-3xl">
           <CardContent className="p-6">
-            <form className="flex flex-col gap-5">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+              {/* Error Message */}
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3">
+                  {error}
+                </div>
+              )}
+
               {/* Email Field */}
               <div className="flex flex-col gap-2">
                 <Label
@@ -64,6 +114,11 @@ export default function LoginPage() {
                     id="email"
                     type="email"
                     placeholder="Masukkan email Anda"
+                    value={form.email}
+                    onChange={(e) =>
+                      setForm({ ...form, email: e.target.value })
+                    }
+                    required
                     className="pl-10 h-12 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-blue-400 transition-colors"
                   />
                 </div>
@@ -83,6 +138,12 @@ export default function LoginPage() {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Masukkan password Anda"
+                    value={form.password}
+                    onChange={(e) =>
+                      setForm({ ...form, password: e.target.value })
+                    }
+                    required
+                    minLength={8}
                     className="pl-10 pr-10 h-12 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-blue-400 transition-colors"
                   />
                   <button
@@ -112,9 +173,17 @@ export default function LoginPage() {
               {/* Login Button */}
               <button
                 type="submit"
-                className="w-full h-12 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:from-blue-600 hover:to-blue-700 transition-all duration-300 active:scale-[0.98]"
+                disabled={loading}
+                className="w-full h-12 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:from-blue-600 hover:to-blue-700 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Masuk
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Memproses...
+                  </>
+                ) : (
+                  "Masuk"
+                )}
               </button>
 
               {/* Divider */}
