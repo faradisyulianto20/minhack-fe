@@ -1,13 +1,54 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        const msg = Array.isArray(data.message)
+          ? data.message.join(", ")
+          : data.message || "Login gagal";
+        setError(msg);
+        return;
+      }
+
+      // Simpan token jika ada
+      if (data.access_token) {
+        localStorage.setItem("access_token", data.access_token);
+      }
+
+      router.push("/beranda");
+    } catch {
+      setError("Tidak dapat terhubung ke server. Coba lagi nanti.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen w-full max-w-md mx-auto bg-zinc-50 font-sans dark:bg-black">
@@ -49,7 +90,13 @@ export default function LoginPage() {
       <div className="px-6 -mt-8">
         <Card className="border-0 shadow-[0_4px_20px_rgba(0,0,0,0.08)] rounded-3xl">
           <CardContent className="p-6">
-            <form className="flex flex-col gap-5">
+            <form className="flex flex-col gap-5" onSubmit={handleLogin}>
+              {/* Error Message */}
+              {error && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm text-center">
+                  {error}
+                </div>
+              )}
               {/* Email Field */}
               <div className="flex flex-col gap-2">
                 <Label
@@ -64,6 +111,9 @@ export default function LoginPage() {
                     id="email"
                     type="email"
                     placeholder="Masukkan email Anda"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
                     className="pl-10 h-12 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-blue-400 transition-colors"
                   />
                 </div>
@@ -83,6 +133,9 @@ export default function LoginPage() {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Masukkan password Anda"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
                     className="pl-10 pr-10 h-12 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-blue-400 transition-colors"
                   />
                   <button
@@ -112,9 +165,17 @@ export default function LoginPage() {
               {/* Login Button */}
               <button
                 type="submit"
-                className="w-full h-12 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:from-blue-600 hover:to-blue-700 transition-all duration-300 active:scale-[0.98]"
+                disabled={isLoading}
+                className="w-full h-12 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:from-blue-600 hover:to-blue-700 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Masuk
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Memproses...
+                  </>
+                ) : (
+                  "Masuk"
+                )}
               </button>
 
               {/* Divider */}
